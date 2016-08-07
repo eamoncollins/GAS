@@ -1,0 +1,54 @@
+/* The purpose of this script is to take data from the attached spreadsheet
+and create either time limited or all-day events in Google Calendar. 
+The engine of this code was taken from +Tony Hirst's blog post 
+http://blog.ouseful.info/2010/03/04/maintaining-google-calendars-from-a-google-spreadsheet/ 
+
+I haved tailored one or two things in the meantime.
+Eamon Collins
+29/08/2014 */
+
+/*function onOpen() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var menuEntries = [ {name: "Add events", functionName: "addCalEvent"} ];
+  ss.addMenu("Calendar", menuEntries);
+}*/
+
+ // Add a custom menu to the active spreadsheet, including a separator and a sub-menu.
+ function onOpen() {
+   SpreadsheetApp.getUi()
+       .createMenu('Calendar')
+       .addItem('Add events', 'addCalEvent')
+       .addToUi();
+ }
+ 
+
+function addCalEvent() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var startRow = 2;  // First row of data to process
+  var numRows = sheet.getLastRow();   // Number of rows to process
+  var maxRows = Math.min(numRows,200); //Limit the number of rows to prevent enormous number of event creations
+  var calid = sheet.getRange("G2").getValue(); //putting the calendar name in double quotes creates double entries. Who knew?
+  var dataRange = sheet.getRange(startRow, 1, maxRows, 6); //startRow, startCol, endRow, endCol
+  var data = dataRange.getValues();
+  var cal = CalendarApp.getCalendarsByName(calid)[0]; //get the calendar name 
+  
+  
+  for (i in data) {
+    var row = data[i];
+    var title = row[0];      // column A
+    var desc = row[1];       // column B
+    var tstart = row[2];     // column C
+    var tstop = row[3];      // column D
+    var loc = row[4];        // column E
+    var allDay = row[5];     // column F
+    
+
+    
+    if (allDay == "N" || allDay == "n") {
+          cal.createEvent(title, new Date(tstart), new Date(tstop), {description:desc,location:loc});
+      } else  {
+          cal.createAllDayEvent(title, new Date(tstart), {description:desc, location:loc}); // Creates an all-day event.
+      } 
+ 
+ }
+}
